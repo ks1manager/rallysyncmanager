@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Rally Sync Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #050910;
+      color: #f5f5f5;
+    }
+    .container {
+      max-width: 900px;
+      margin: 24px auto 40px;
+      padding: 16px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 22px;
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+    }
+    .card {
+      background: #111827;
+      border-radius: 12px;
+      padding: 16px 20px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      border: 1px solid #1f2937;
+    }
+    .card h2 { margin: 0; font-size: 1.2rem; }
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .section-title .index {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .mode-badges {
+      display: inline-flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #9ca3af;
+    }
+    .badge.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #e5f0ff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+    thead { background: #020617; }
+    th, td {
+      padding: 8px 6px;
+      text-align: center;
+      border-bottom: 1px solid #1f2937;
+      font-size: 0.9rem;
+    }
+    th { font-weight: 500; color: #9ca3af; }
+    tbody tr:hover { background: rgba(37, 99, 235, 0.08); }
+    input[type="text"],
+    input[type="number"],
+    input[type="password"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.1s ease;
+      white-space: nowrap;
+    }
+    .btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4) inset;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: #e5f0ff;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.35);
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline {
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+    }
+    .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+
+    .btn-danger{
+      background:#b91c1c;
+      color:#fee2e2;
+      border:1px solid #dc2626;
+    }
+    .btn-danger:hover{ background:#dc2626; }
+
+    .add-row-wrapper { margin-top: 10px; display: flex; justify-content: flex-start; }
+
+    .rally-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.75rem;
+      cursor: pointer;
+      min-width: 38px;
+    }
+    .rally-btn.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #e5f0ff;
+    }
+
+    .time-inputs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .time-inputs .time-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .time-inputs .time-box label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: center;
+      width: 100%;
+    }
+    .time-inputs input { width: 80px; text-align: center; }
+
+    .now-time {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      line-height: 1.45rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .now-time .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .now-time .label { color: #9ca3af; }
+    .now-time .value {
+      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: #e5e7eb;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    .result-box {
+      margin-top: 2px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 1.1rem;
+      line-height: 1.55rem;
+      white-space: pre-line;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .footer-note {
+      margin-top: 4px;
+      margin-right: 6px;
+      font-size: 0.95rem;
+      line-height: 1.45rem;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    .march-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .march-input { max-width: 80px; text-align: center; }
+    .btn-march {
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .btn-march:hover { background: #1f2937; }
+    .march-hint {
+      margin-top: 3px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-align: center;
+      min-height: 16px;
+    }
+
+    .top-actions {
+      position: fixed;
+      right: 16px;
+      top: 14px;
+      z-index: 50;
+      display: none;
+      gap: 8px;
+    }
+
+    .lock-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(1200px 600px at 50% 10%, rgba(37,99,235,0.18), transparent 60%),
+                  rgba(0,0,0,0.72);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .lock-card {
+      width: min(620px, 100%);
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+      padding: 18px 18px 16px;
+    }
+    .lock-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin: 0 0 6px 0;
+      color: #e5e7eb;
+      text-align: center;
+    }
+    .lock-desc {
+      margin: 0 0 14px 0;
+      color: #9ca3af;
+      font-size: 0.92rem;
+      line-height: 1.35rem;
+      text-align: center;
+    }
+    .lock-row { display: flex; gap: 10px; align-items: center; }
+    .lock-error {
+      margin-top: 10px;
+      color: #fca5a5;
+      font-size: 0.9rem;
+      min-height: 18px;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .setup-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      display: none;
+    }
+    .setup-title {
+      font-size: 0.95rem;
+      font-weight: 650;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .setup-hint {
+      margin-top: 8px;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      line-height: 1.3rem;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .app-hidden { display: none; }
+
+    @media (max-width: 640px) {
+      .container { padding: 12px; }
+      th, td { font-size: 0.8rem; padding: 6px 4px; }
+      .time-inputs input { width: 60px; }
+      h1 { font-size: 1.4rem; }
+      .now-time .row { white-space: normal; }
+      .lock-row { flex-direction: column; }
+      .setup-grid { grid-template-columns: 1fr; }
+    }
+
+    .voice-bar{
+      margin-top: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .btn-voice-on{
+      background: #2563eb !important;
+      border-color: #3b82f6 !important;
+      color: #e5f0ff !important;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.35);
+    }
+    .btn-voice-off{ }
+  </style>
+</head>
+<body>
+
+<div class="top-actions" id="topActions">
+  <button id="resetBtn" class="btn btn-outline btn-sm">⟲ 초기화</button>
+  <button id="lockBtn" class="btn btn-outline btn-sm">🔒 잠금</button>
+</div>
+
+<div class="lock-overlay" id="lockOverlay" style="display:none;">
+  <div class="lock-card">
+    <div class="lock-title">Rally Sync Manager</div>
+    <p class="lock-desc">
+      비밀번호(최소 6자리)를 입력하면 사용할 수 있습니다.<br>
+      탭/브라우저 종료 시 자동 잠금
+    </p>
+
+    <div class="lock-row">
+      <input id="pwInput" type="password" placeholder="비밀번호 (6자리 이상)" autocomplete="current-password">
+      <button id="pwSubmit" class="btn btn-primary">열기</button>
+    </div>
+
+    <div class="lock-error" id="pwError"></div>
+
+    <div class="setup-box" id="setupBox">
+      <div class="setup-title">설정 모드 (운영 중에는 숨김)</div>
+
+      <div class="setup-grid">
+        <input id="setupKeyInput" type="password" placeholder="설정 키 입력 (관리자용)" autocomplete="off">
+        <button id="setupEnterBtn" class="btn btn-outline btn-sm" type="button">진입</button>
+      </div>
+
+      <div class="setup-grid" style="margin-top:8px;">
+        <input id="newPwInput" type="password" placeholder="새 비밀번호 (6자리 이상) 입력" autocomplete="new-password">
+        <button id="makeHashBtn" class="btn btn-outline btn-sm" type="button">해시 생성</button>
+      </div>
+
+      <div class="setup-hint" id="setupHint">
+        1) 설정 키로 진입 → 2) 새 비밀번호 입력 → 3) 해시 생성 클릭<br>
+        4) 아래 출력된 해시를 PASSWORD_HASH_B64에 붙여넣고 배포
+      </div>
+    </div>
+
+    <div class="setup-hint" id="setupFooter">
+      초기화: 우측 상단 ⟲ 초기화 또는 탭/브라우저 종료
+    </div>
+  </div>
+</div>
+
+<div class="container app-hidden" id="appRoot">
+  <h1>Rally Sync Manager</h1>
+
+  <div class="card">
+    <div class="section-title">
+      <span class="index">1.</span>
+      <h2>집결 편성 설정</h2>
+    </div>
+
+    <div class="mode-badges">
+      <span class="badge active">집결 도착 기준 (자동 첫 집결장 계산)</span>
+    </div>
+
+    <table>
+      <thead>
+      <tr>
+        <th style="width: 6%;">선택</th>
+        <th style="width: 20%;">이름</th>
+        <th style="width: 24%;">집결(분)</th>
+        <th style="width: 20%;">행군(초)</th>
+        <th style="width: 18%;">지연(초)</th>
+        <th style="width: 12%;">삭제</th>
+      </tr>
+      </thead>
+      <tbody id="troop-body"></tbody>
+    </table>
+
+    <div class="add-row-wrapper">
+      <button id="addRowBtn" class="btn btn-primary btn-sm">＋ 집결 추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">
+      <span class="index">2.</span>
+      <h2>도착 목표 시각</h2>
+    </div>
+
+    <div style="font-size:0.9rem; color:#9ca3af; margin-bottom:4px;">
+      모든 부대가 도착해야 하는 시각을 <b>24시간 형식</b>(HH:MM:SS)으로 입력합니다.<br>
+      예: 자정 00:00:00, 오후 2시는 14:00:00
+    </div>
+
+    <div class="time-inputs">
+      <div class="time-box">
+        <label for="baseHour">시 (Hour)</label>
+        <input type="number" id="baseHour" min="0" max="23" value="">
+      </div>
+      <div class="time-box">
+        <label for="baseMinute">분 (Minute)</label>
+        <input type="number" id="baseMinute" min="0" max="59" value="">
+      </div>
+      <div class="time-box">
+        <label for="baseSecond">초 (Second)</label>
+        <input type="number" id="baseSecond" min="0" max="59" value="">
+      </div>
+    </div>
+
+    <div class="now-time" id="nowTimeBox" aria-live="polite">
+      <div class="row">
+        <div class="label">현재 시간 (UTC)</div>
+        <div class="value" id="nowUtc">--:--:--</div>
+      </div>
+      <div class="row">
+        <div class="label">현재 시간 (KST, 한국)</div>
+        <div class="value" id="nowKst">--:--:--</div>
+      </div>
+    </div>
+
+    <div class="result-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="font-weight:500;">결과</div>
+
+        <button
+          id="voiceToggleBtn"
+          type="button"
+          class="btn btn-outline btn-sm btn-voice-off">
+          🔇 출발 음성 OFF
+        </button>
+      </div>
+
+      <div>
+        <button id="copyBtn" class="btn btn-outline btn-sm">텍스트 복사</button>
+      </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      집결을 추가하고 도착 목표 시각을 입력하면 여기 결과가 표시됩니다.
+    </div>
+
+    <div class="footer-note">
+      시작 = 목표도착 − 집결(분) − 행군(초) + 지연(초) / 도착 = 목표도착 + 지연(초)<br>
+      첫 집결 생성 시각 = 가장 빠른 집결 시작 시각<br>
+      순번 아이콘: 🔴1순위 > 🟡2순위 > 🟢3순위 > 🔵4순위 > 🟣5순위 > 🟤6순위<br>
+      (도착 시간이 빠를수록 앞 순위)
+    </div>
+
+    <div style="
+      text-align:center;
+      position:relative;
+      top:70px;
+      margin-bottom:2px;
+      color:#cbd5e1;
+      font-size:0.9rem;
+      font-weight:500;
+      line-height:1.2rem;
+    ">
+      © 2025 Created by 방울 · #1
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ✅ GitHub Pages(정적)에서 가능한 최대치: session 잠금 + PBKDF2 + 백오프
+   ========================================================= */
+
+const SETUP_KEY = "Dbsgml0827#"; // ← 반드시 교체 권장
+const PBKDF2_ITER = 200_000;
+const PBKDF2_SALT_B64 = "UlNNX3YzX3NhbHRfXzE2Ynl0ZXM=";
+const PASSWORD_HASH_B64 = "7JgQLT6xaX3+f36uK0F9fzr4RU6tnDdYAuFUXBwt4N0=";
+
+const AUTH_KEY      = "rsm_auth_ok_v3";
+const FAIL_COUNT_K  = "rsm_fail_count_v3";
+const LOCK_UNTIL_K  = "rsm_lock_until_v3";
+
+function nowMs(){ return Date.now(); }
+
+function b64ToU8(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function u8ToB64(u8){
+  let s = "";
+  for (let i=0;i<u8.length;i++) s += String.fromCharCode(u8[i]);
+  return btoa(s);
+}
+function ctEqualB64(a,b){
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i=0;i<a.length;i++) r |= (a.charCodeAt(i) ^ b.charCodeAt(i));
+  return r === 0;
+}
+async function pbkdf2HashB64(password){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const salt = b64ToU8(PBKDF2_SALT_B64);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: PBKDF2_ITER, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  return u8ToB64(new Uint8Array(bits));
+}
+
+function isAuthed(){ return sessionStorage.getItem(AUTH_KEY) === "1"; }
+function setAuthed(ok){
+  if (ok) sessionStorage.setItem(AUTH_KEY,"1");
+  else sessionStorage.removeItem(AUTH_KEY);
+}
+function getFailCount(){ return parseInt(sessionStorage.getItem(FAIL_COUNT_K)||"0",10)||0; }
+function setFailCount(n){ sessionStorage.setItem(FAIL_COUNT_K, String(Math.max(0, n|0))); }
+function getLockUntil(){ return parseInt(sessionStorage.getItem(LOCK_UNTIL_K)||"0",10)||0; }
+function setLockUntil(ts){ sessionStorage.setItem(LOCK_UNTIL_K, String(ts|0)); }
+
+function resetSessionAll(){
+  sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(FAIL_COUNT_K);
+  sessionStorage.removeItem(LOCK_UNTIL_K);
+}
+
+/* =========================
+   ✅ TTS 모바일 안정화 (iOS Safari / Android Chrome)
+   ========================= */
+function isMobile(){
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+}
+function isIOS(){
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent || "") ||
+    (navigator.userAgent.includes("Mac") && ("ontouchend" in document));
+}
+
+let ttsUnlocked = false;
+let ttsVoicesReady = false;
+
+function waitVoicesReady(timeoutMs=2000){
+  return new Promise((resolve)=>{
+    try{
+      const v0 = speechSynthesis.getVoices();
+      if (v0 && v0.length){
+        ttsVoicesReady = true;
+        return resolve(true);
+      }
+    }catch(e){}
+    let to = null;
+    const on = ()=>{
+      try{
+        const v = speechSynthesis.getVoices();
+        if (v && v.length){
+          cleanup();
+          ttsVoicesReady = true;
+          resolve(true);
+        }
+      }catch(e){}
+    };
+    const cleanup = ()=>{
+      if (to) clearTimeout(to);
+      try{ speechSynthesis.removeEventListener("voiceschanged", on); }catch(e){}
+    };
+    try{ speechSynthesis.addEventListener("voiceschanged", on); }catch(e){}
+    to = setTimeout(()=>{ cleanup(); resolve(false); }, timeoutMs);
+  });
+}
+
+async function unlockTTS(){
+  if (!("speechSynthesis" in window)) return false;
+  if (ttsUnlocked) return true;
+
+  // iOS는 voices 로드가 늦는 편
+  await waitVoicesReady(2500);
+
+  // ✅ 사용자 탭(제스처) 시점에 무음 워밍업 1회
+  try{
+    const u = new SpeechSynthesisUtterance(" ");
+    u.lang = "ko-KR";
+    u.volume = 0; // 무음
+    u.rate = 1;
+
+    // iOS에서 cancel 남발하면 씹힐 수 있어 최소화
+    speechSynthesis.speak(u);
+
+    ttsUnlocked = true;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+/* ========================================================= */
+
+function showApp(){
+  document.getElementById("appRoot").classList.remove("app-hidden");
+  document.getElementById("lockOverlay").style.display = "none";
+  document.getElementById("topActions").style.display = "flex";
+  updateNowTime();
+  setInterval(updateNowTime, 1000);
+}
+
+function showLock(message){
+  document.getElementById("appRoot").classList.add("app-hidden");
+  document.getElementById("lockOverlay").style.display = "flex";
+  document.getElementById("topActions").style.display = "none";
+  const pw = document.getElementById("pwInput");
+  const err = document.getElementById("pwError");
+  if (pw) pw.value = "";
+  if (err) err.textContent = message || "";
+  if (pw) pw.focus();
+  updateLockUI();
+}
+
+function updateLockUI(){
+  const pw = document.getElementById("pwInput");
+  const btn = document.getElementById("pwSubmit");
+  const err = document.getElementById("pwError");
+
+  const until = getLockUntil();
+  const remain = until - nowMs();
+  if (remain > 0){
+    const sec = Math.ceil(remain/1000);
+    if (pw) pw.disabled = true;
+    if (btn) btn.disabled = true;
+    if (err) err.textContent = `잠금 상태: ${sec}초 후 다시 시도`;
+    return;
+  }
+  if (pw) pw.disabled = false;
+  if (btn) btn.disabled = false;
+}
+
+function bumpLock(){
+  const fc = getFailCount();
+  const table = [0, 2, 5, 10, 20, 40, 60];
+  const lockSec = table[Math.min(fc, table.length-1)];
+  if (lockSec > 0) setLockUntil(nowMs() + lockSec*1000);
+}
+
+async function tryLogin(){
+  updateLockUI();
+  const until = getLockUntil();
+  if (until - nowMs() > 0) return;
+
+  const pw = (document.getElementById("pwInput").value || "").trim();
+  const err = document.getElementById("pwError");
+
+  if (pw.length < 6){
+    if (err) err.textContent = "비밀번호는 최소 6자리 이상이어야 합니다.";
+    return;
+  }
+
+  const got = await pbkdf2HashB64(pw);
+  if (ctEqualB64(got, PASSWORD_HASH_B64)) {
+    setAuthed(true);
+    setFailCount(0);
+    setLockUntil(0);
+    showApp();
+    return;
+  }
+
+  setFailCount(getFailCount()+1);
+  bumpLock();
+  if (err) err.textContent = "비밀번호가 올바르지 않습니다.";
+  updateLockUI();
+}
+
+/* ✅ 설정 모드 */
+let setupUnlocked = false;
+
+function openSetupBox(){
+  document.getElementById("setupBox").style.display = "block";
+}
+
+function closeSetupBox(){
+  document.getElementById("setupBox").style.display = "none";
+  setupUnlocked = false;
+  document.getElementById("setupKeyInput").value = "";
+  document.getElementById("newPwInput").value = "";
+}
+
+function tryEnterSetup(){
+  const k = (document.getElementById("setupKeyInput").value || "").trim();
+  const hint = document.getElementById("setupHint");
+  if (k === SETUP_KEY){
+    setupUnlocked = true;
+    if (hint) hint.textContent =
+      "설정 모드 진입 완료.\n새 비밀번호(6자리 이상)를 입력하고 [해시 생성]을 누르세요.\n생성된 해시를 PASSWORD_HASH_B64에 붙여넣고 다시 배포하면 변경됩니다.";
+    return;
+  }
+  if (hint) hint.textContent = "설정 키가 올바르지 않습니다.";
+}
+
+async function makeHashForNewPassword(){
+  const err = document.getElementById("pwError");
+  const hint = document.getElementById("setupHint");
+  if (!setupUnlocked){
+    if (hint) hint.textContent = "먼저 [진입]으로 설정 모드를 해제(Unlock)하세요.";
+    return;
+  }
+  const newPw = (document.getElementById("newPwInput").value || "").trim();
+  if (newPw.length < 6){
+    if (hint) hint.textContent = "새 비밀번호는 최소 6자리 이상이어야 합니다.";
+    return;
+  }
+  const h = await pbkdf2HashB64(newPw);
+  if (err) err.textContent = `해시 생성 완료 → PASSWORD_HASH_B64에 붙여넣기:\n${h}`;
+  if (hint) hint.textContent =
+    "1) 위 해시를 복사\n2) 코드의 PASSWORD_HASH_B64 값을 교체\n3) GitHub에 커밋/배포\n4) 새 비밀번호로 접속";
+}
+
+/* =========================
+   ✅ 출발 음성
+   ========================= */
+let voiceEnabled = false;
+let voiceQueue = [];         // [{ order, name, fireUtcMs, id }]
+let voiceSpoken = new Set(); // id set
+let voiceTimer = null;
+let voiceNextAllowedMs = 0;
+
+function speakOnceKo(text){
+  try{
+    if (!("speechSynthesis" in window)) return;
+    if (isMobile() && !ttsUnlocked) return; // ✅ 모바일은 unlock 전 자동발화 금지
+
+    // iOS에서 cancel 남발 이슈 → 말하는 중일 때만 취소
+    if (speechSynthesis.speaking || speechSynthesis.pending){
+      speechSynthesis.cancel();
+    }
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ko-KR";
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function getKstParts(){
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).formatToParts(now);
+
+  const pick = (t)=> parts.find(p=>p.type===t)?.value;
+  return {
+    y: parseInt(pick("year"),10),
+    mo: parseInt(pick("month"),10),
+    d: parseInt(pick("day"),10),
+    h: parseInt(pick("hour"),10),
+    mi: parseInt(pick("minute"),10),
+    s: parseInt(pick("second"),10),
+  };
+}
+
+function kstNowUtcMs(){
+  const p = getKstParts();
+  return Date.UTC(p.y, p.mo-1, p.d, p.h-9, p.mi, p.s);
+}
+
+function kstTodayStartUtcMs(){
+  const p = getKstParts();
+  return Date.UTC(p.y, p.mo-1, p.d, -9, 0, 0);
+}
+
+function normSecOfDay(sec){
+  const day = 86400;
+  let x = sec % day;
+  if (x < 0) x += day;
+  return x;
+}
+
+function nextFireUtcMsForSecOfDay(secOfDay){
+  const now = kstNowUtcMs();
+  const base = kstTodayStartUtcMs();
+  let fire = base + normSecOfDay(secOfDay) * 1000;
+  if (fire < now - 300) fire += 86400 * 1000;
+  return fire;
+}
+
+async function voiceSetEnabled(on){
+  voiceEnabled = !!on;
+
+  const btn = document.getElementById("voiceToggleBtn");
+  if (btn){
+    if (voiceEnabled){
+      btn.textContent = "🔊 출발 음성 ON";
+      btn.classList.add("btn-voice-on");
+      btn.classList.remove("btn-voice-off");
+    } else {
+      btn.textContent = "🔇 출발 음성 OFF";
+      btn.classList.remove("btn-voice-on");
+      btn.classList.add("btn-voice-off");
+    }
+  }
+
+  if (!voiceEnabled){
+    voiceSpoken.clear();
+    voiceQueue = [];
+    voiceNextAllowedMs = 0;
+    if (voiceTimer){ clearInterval(voiceTimer); voiceTimer = null; }
+    try{ if ("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){}
+    return;
+  }
+
+  // ✅ iOS Safari/모바일은 토글(탭) 순간에 unlock이 핵심
+  if (isMobile()){
+    await unlockTTS();
+  }
+
+  if (!voiceTimer){
+    voiceTimer = setInterval(voiceTick, 250);
+  }
+}
+
+function voiceRefreshFromSorted(sortedItems){
+  voiceSpoken.clear();
+  voiceNextAllowedMs = 0;
+
+  const anySelected = (sortedItems || []).some(it => it.selected);
+  const list = anySelected ? (sortedItems || []).filter(it => it.selected) : []; // 체크 0명이면 무음
+
+  voiceQueue = list.map((it, idx) => {
+    const startSec = normSecOfDay(it.startSeconds);
+    const fire = nextFireUtcMsForSecOfDay(startSec);
+    return { order: idx + 1, name: it.name, fireUtcMs: fire, id: it.name + "@" + fire };
+  });
+}
+
+function voiceTick(){
+  if (!voiceEnabled) return;
+  if (!voiceQueue || voiceQueue.length === 0) return;
+
+  // ✅ 모바일은 unlock 안 되면 tick 발화 금지
+  if (isMobile() && !ttsUnlocked) return;
+
+  const now = Date.now();
+  if (now < voiceNextAllowedMs) return;
+
+  let target = null;
+  for (const it of voiceQueue){
+    if (voiceSpoken.has(it.id)) continue;
+    if (now >= it.fireUtcMs){ target = it; break; }
+  }
+  if (!target) return;
+
+  speakOnceKo(`${target.name} 출발`);
+  voiceSpoken.add(target.id);
+  voiceNextAllowedMs = now + 1200; // 붙어읽기 방지
+}
+
+/* =========================
+   기존 기능(시간/계산)
+   ========================= */
+let lastCopyText = "";
+function pad2(num){ return num.toString().padStart(2,"0"); }
+
+function updateNowTime(){
+  const utcEl = document.getElementById("nowUtc");
+  const kstEl = document.getElementById("nowKst");
+  if (!utcEl || !kstEl) return;
+
+  const now = new Date();
+  const utc = new Intl.DateTimeFormat("en-GB", {
+    timeZone:"UTC", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
+  }).format(now);
+  const kst = new Intl.DateTimeFormat("en-GB", {
+    timeZone:"Asia/Seoul", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
+  }).format(now);
+  utcEl.textContent = utc;
+  kstEl.textContent = kst;
+}
+
+function parseTimeInput(val){
+  if (!val) return 0;
+  val = String(val).trim();
+  if (val.includes(":")){
+    const parts = val.split(":");
+    let m = parseInt(parts[0].replace(/\D/g,""),10);
+    let s = parseInt((parts[1]||"0").replace(/\D/g,""),10);
+    if (isNaN(m)) m=0; if (isNaN(s)) s=0;
+    if (s>=60){ m += Math.floor(s/60); s = s%60; }
+    return m*60 + s;
+  }
+  const n = parseInt(val.replace(/\D/g,""),10);
+  return isNaN(n)?0:n;
+}
+
+function formatMMSS(sec){
+  sec = Math.max(0, parseInt(sec,10)||0);
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  if (m===0) return String(s);
+  return m + ":" + pad2(s);
+}
+
+function formatTimeFromSeconds(totalSeconds){
+  const secondsInDay = 24*3600;
+  let sec = ((totalSeconds%secondsInDay)+secondsInDay)%secondsInDay;
+  const h = Math.floor(sec/3600); sec%=3600;
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return pad2(h)+":"+pad2(m)+":"+pad2(s);
+}
+
+function getBaseSeconds(){
+  const hRaw = document.getElementById("baseHour").value;
+  const mRaw = document.getElementById("baseMinute").value;
+  const sRaw = document.getElementById("baseSecond").value;
+  if (hRaw==="" && mRaw==="" && sRaw==="") return null;
+  const h = parseInt(hRaw,10)||0;
+  const m = parseInt(mRaw,10)||0;
+  const s = parseInt(sRaw,10)||0;
+  const hh = Math.min(Math.max(h,0),23);
+  const mm = Math.min(Math.max(m,0),59);
+  const ss = Math.min(Math.max(s,0),59);
+  return hh*3600 + mm*60 + ss;
+}
+
+function recalc(){
+  const tbody = document.getElementById("troop-body");
+  const rows = tbody.querySelectorAll("tr");
+  const box = document.getElementById("resultBox");
+
+  if (rows.length===0){
+    box.textContent = "집결을 추가해 주세요.";
+    lastCopyText = "";
+    voiceRefreshFromSorted([]);
+    return;
+  }
+  const baseSeconds = getBaseSeconds();
+  if (baseSeconds===null){
+    box.textContent = "도착 목표 시각을 먼저 입력해 주세요.";
+    lastCopyText = "";
+    voiceRefreshFromSorted([]);
+    return;
+  }
+
+  const items = [];
+  rows.forEach(function(row,index){
+    const nameInput = row.querySelector(".name");
+    const marchInput = row.querySelector(".march");
+    const delayInput = row.querySelector(".delay");
+    const rallyToggle = row.querySelector(".rally-toggle");
+    const marchHint = row.querySelector(".march-hint");
+    const meChk = row.querySelector(".voice-me");
+
+    const isNameEmpty = !nameInput.value.trim();
+    const isMarchEmpty = !marchInput.value.trim();
+    const isDelayEmpty = !delayInput.value.trim();
+    if (isNameEmpty && isMarchEmpty && isDelayEmpty){
+      if (marchHint) marchHint.textContent="";
+      return;
+    }
+
+    const name = (nameInput.value||"").trim() || (index+1)+"번";
+
+    let rallyMin = 0;
+    if (rallyToggle){
+      const activeBtn = rallyToggle.querySelector(".rally-btn.active");
+      if (activeBtn) rallyMin = parseInt(activeBtn.dataset.value,10)||0;
+    }
+
+    const marchSec = parseTimeInput(marchInput.value);
+    const delaySec = parseInt(delayInput.value,10)||0;
+
+    if (marchHint){
+      if (marchSec>0) marchHint.textContent = "행군: " + formatMMSS(marchSec) + " (" + marchSec + "초)";
+      else marchHint.textContent = "";
+    }
+
+    const startSeconds = baseSeconds - rallyMin*60 - marchSec + delaySec;
+    const arrivalSeconds = baseSeconds + delaySec;
+    const selected = !!(meChk && meChk.checked);
+
+    items.push({ name, rallyMin, startSeconds, arrivalSeconds, selected });
+  });
+
+  if (items.length===0){
+    box.textContent = "집결 정보를 입력해 주세요.";
+    lastCopyText = "";
+    voiceRefreshFromSorted([]);
+    return;
+  }
+
+  let leader = items[0];
+  items.forEach(it=>{ if (it.startSeconds < leader.startSeconds) leader = it; });
+
+  const headerLine = "🔷 첫 집결 생성 시각: " + formatTimeFromSeconds(leader.startSeconds) +
+    " (첫 집결장: " + leader.name + ")";
+
+  const sortedItems = items.slice().sort((a,b)=>{
+    if (a.arrivalSeconds !== b.arrivalSeconds) return a.arrivalSeconds - b.arrivalSeconds;
+    return a.startSeconds - b.startSeconds;
+  });
+
+  const rankIcons = ["🔴","🟡","🟢","🔵","🟣","🟤"];
+  const lines = sortedItems.map((it,idx)=>{
+    const icon = rankIcons[idx] || "⚪";
+    return icon + " " + it.name + ": 집결 시작 " + formatTimeFromSeconds(it.startSeconds) +
+      " | " + it.rallyMin + "분 집결" +
+      " | 예상 도착 " + formatTimeFromSeconds(it.arrivalSeconds);
+  });
+
+  const fullText = headerLine + "\n" + lines.join("\n");
+  box.textContent = fullText;
+  lastCopyText = fullText;
+
+  voiceRefreshFromSorted(sortedItems);
+}
+
+function attachRowEvents(row){
+  const nameInput = row.querySelector(".name");
+  const marchInput = row.querySelector(".march");
+  const delayInput = row.querySelector(".delay");
+  const rallyButtons = row.querySelectorAll(".rally-btn");
+  const adjustButtons = row.querySelectorAll(".btn-march");
+  const marchHint = row.querySelector(".march-hint");
+  const meChk = row.querySelector(".voice-me");
+
+  [nameInput, delayInput].forEach(input=>{
+    if (!input) return;
+    input.addEventListener("input", recalc);
+  });
+
+  if (meChk) meChk.addEventListener("change", recalc);
+
+  if (marchInput){
+    marchInput.addEventListener("input", recalc);
+    marchInput.addEventListener("blur", function(){
+      const sec = parseTimeInput(marchInput.value);
+      if (sec<=0){
+        marchInput.value="";
+        if (marchHint) marchHint.textContent="";
+      } else {
+        marchInput.value = formatMMSS(sec);
+      }
+      recalc();
+    });
+  }
+
+  rallyButtons.forEach(btn=>{
+    btn.addEventListener("click", function(){
+      rallyButtons.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      recalc();
+    });
+  });
+
+  adjustButtons.forEach(btn=>{
+    btn.addEventListener("click", function(){
+      const delta = parseInt(btn.dataset.delta,10)||0;
+      let sec = parseTimeInput(marchInput.value);
+      sec = Math.max(0, sec + delta);
+      if (sec===0){
+        marchInput.value="";
+        if (marchHint) marchHint.textContent="";
+      } else {
+        marchInput.value = formatMMSS(sec);
+      }
+      recalc();
+    });
+  });
+
+  const delBtn = row.querySelector(".btn-delete");
+  if (delBtn) delBtn.addEventListener("click", function(){ row.remove(); recalc(); });
+}
+
+function createRow(defaults, deletable=true){
+  const tbody = document.getElementById("troop-body");
+  const tr = document.createElement("tr");
+
+  const d = Object.assign({ name:"", rally:5, march:"", delay:"" }, defaults||{});
+  const rallyVal = parseInt(d.rally,10) || 5;
+
+  const deleteCellHtml = deletable
+    ? `<button type="button" class="btn btn-danger btn-sm btn-delete">삭제</button>`
+    : "";
+
+  tr.innerHTML = `
+    <td><input type="checkbox" class="voice-me"></td>
+    <td><input type="text" class="name" placeholder="닉네임" value="${d.name}"></td>
+    <td>
+      <div class="rally-toggle" style="display:flex; flex-direction:column; gap:4px;">
+        <div style="display:flex; gap:4px; justify-content:center;">
+          <button type="button" class="rally-btn ${rallyVal===1?"active":""}" data-value="1">1분</button>
+          <button type="button" class="rally-btn ${rallyVal===3?"active":""}" data-value="3">3분</button>
+          <button type="button" class="rally-btn ${rallyVal===5?"active":""}" data-value="5">5분</button>
+        </div>
+        <div style="display:flex; gap:4px; justify-content:center;">
+          <button type="button" class="rally-btn ${rallyVal===15?"active":""}" data-value="15">15분</button>
+          <button type="button" class="rally-btn ${rallyVal===30?"active":""}" data-value="30">30분</button>
+          <button type="button" class="rally-btn ${rallyVal===60?"active":""}" data-value="60">60분</button>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="march-wrapper">
+        <button type="button" class="btn-march" data-delta="-1">-1</button>
+        <input type="text" class="march march-input" value="${d.march}" placeholder="예: 1:30">
+        <button type="button" class="btn-march" data-delta="1">+1</button>
+      </div>
+      <div class="march-hint"></div>
+    </td>
+    <td><input type="number" class="delay" min="0" step="1" value="${d.delay}"></td>
+    <td>${deleteCellHtml}</td>
+  `;
+
+  tbody.appendChild(tr);
+  attachRowEvents(tr);
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  if (isAuthed()) showApp();
+  else showLock();
+
+  document.getElementById("pwSubmit").addEventListener("click", tryLogin);
+  document.getElementById("pwInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter") tryLogin(); });
+
+  document.getElementById("lockBtn").addEventListener("click", ()=>{
+    resetSessionAll();
+    showLock("잠금 처리되었습니다.");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    resetSessionAll();
+    showLock("초기화 완료. 다시 로그인하세요.");
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if (e.ctrlKey && e.altKey && e.shiftKey && (e.key==="s" || e.key==="S")){
+      const box = document.getElementById("setupBox");
+      if (box.style.display === "block") closeSetupBox();
+      else openSetupBox();
+    }
+  });
+
+  document.getElementById("setupEnterBtn").addEventListener("click", tryEnterSetup);
+  document.getElementById("makeHashBtn").addEventListener("click", makeHashForNewPassword);
+
+  setInterval(updateLockUI, 250);
+
+  // 초기 행
+  createRow({}, false);
+  createRow({}, false);
+  createRow({}, false);
+
+  document.getElementById("addRowBtn").addEventListener("click", function(){
+    createRow({}, true);
+    recalc();
+  });
+
+  document.getElementById("baseHour").addEventListener("input", recalc);
+  document.getElementById("baseMinute").addEventListener("input", recalc);
+  document.getElementById("baseSecond").addEventListener("input", recalc);
+
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    if (!lastCopyText) return;
+    if (!navigator.clipboard) {
+      alert("클립보드 복사가 지원되지 않는 환경입니다.");
+      return;
+    }
+    navigator.clipboard.writeText(lastCopyText);
+  });
+
+  // ✅ 출발 음성 토글 (기본 OFF)
+  const voiceBtn = document.getElementById("voiceToggleBtn");
+  if (voiceBtn){
+    voiceBtn.addEventListener("click", async function(){
+      await voiceSetEnabled(!voiceEnabled); // ✅ 토글 탭 순간 unlock
+    });
+  }
+
+  // ✅ 잠금/초기화 시 음성 OFF 강제
+  document.getElementById("lockBtn").addEventListener("click", ()=>{ voiceSetEnabled(false); });
+  document.getElementById("resetBtn").addEventListener("click", ()=>{ voiceSetEnabled(false); });
+});
+</script>
+</body>
+</html>
