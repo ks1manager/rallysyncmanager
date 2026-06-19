@@ -49,6 +49,14 @@
       display: inline-flex;
       gap: 8px;
       margin-bottom: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .mode-label{
+      color:#9ca3af;
+      font-size:0.85rem;
+      font-weight:600;
+      margin-right:2px;
     }
     .badge {
       padding: 4px 10px;
@@ -595,9 +603,9 @@
     </div>
 
     <div class="mode-badges">
-      <button type="button" class="badge active order-step-btn" data-step="1">기본(1초)</button>
-      <button type="button" class="badge order-step-btn" data-step="0.5">0.5초</button>
-      <button type="button" class="badge order-step-btn" data-step="0.2">0.2초</button>
+      <span class="mode-label">도착 간격</span>
+      <button type="button" class="badge active order-step-btn" data-step="0">동시</button>
+      <button type="button" class="badge order-step-btn" data-step="1">1초</button>
     </div>
 
     <div class="troop-table-wrap">
@@ -670,7 +678,7 @@
     </div>
 
     <div class="footer-note">
-      동시 = 자동 도착 목표 시각 그대로 / 1순위 = 자동 도착 목표 시각 그대로 / 2순위부터는 선택한 간격만큼 순차 도착<br>
+      동시 = 모든 집결장이 같은 시간 도착 / 1초 = 순번 기준 1초 간격 순차 도착<br>
       시작 = 자동 도착 목표 − 집결(분) − 행군(초)
     </div>
 
@@ -846,9 +854,7 @@ function formatNowWithDecimal(date, timeZone){
   }).formatToParts(date);
 
   const pick = (t)=> parts.find(p=>p.type===t)?.value || "00";
-  const hundredth = Math.floor(date.getMilliseconds() / 10);
-
-  return pick("hour") + ":" + pick("minute") + ":" + pick("second") + "." + String(hundredth).padStart(2,"0");
+  return pick("hour") + ":" + pick("minute") + ":" + pick("second");
 }
 
 function updateNowTime(){
@@ -898,28 +904,15 @@ function formatTimeFromSeconds(totalSeconds, forceDecimal=false){
   const secondsInDay = 24*3600;
   let sec = ((totalSeconds % secondsInDay) + secondsInDay) % secondsInDay;
 
-  // 0.5초 / 0.2초 순번 계산값이 결과창에서 잘리지 않도록 0.01초 단위로 반올림
-  sec = Math.round(sec * 100) / 100;
-  if (sec >= secondsInDay) sec -= secondsInDay;
+  // 실전 표시용: 소수점은 제거하고 시:분:초까지만 표시
+  sec = Math.floor(sec);
 
-  let whole = Math.floor(sec);
-  let fraction = Math.round((sec - whole) * 100);
-  if (fraction >= 100){
-    whole += 1;
-    fraction = 0;
-  }
-  if (whole >= secondsInDay) whole -= secondsInDay;
+  const h = Math.floor(sec / 3600);
+  sec %= 3600;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
 
-  const h = Math.floor(whole / 3600);
-  const m = Math.floor((whole % 3600) / 60);
-  const s = whole % 60;
-
-  let sText = pad2(s);
-  if (forceDecimal || fraction > 0){
-    sText += "." + String(fraction).padStart(2,"0");
-  }
-
-  return pad2(h)+":"+pad2(m)+":"+sText;
+  return pad2(h)+":"+pad2(m)+":"+pad2(s);
 }
 
 function formatDurationFromSeconds(sec){
@@ -980,7 +973,7 @@ function getAutoTargetLeadSeconds(){
   let maxLead = 0;
   const orderStepSec = getOrderStepSec();
 
-  rows.forEach((row)=>{
+  rows.forEach((row,index)=>{
     const marchInput = row.querySelector(".march");
     const arrivalOrderInput = row.querySelector(".arrival-order");
     const rallyToggle = row.querySelector(".rally-toggle");
@@ -993,7 +986,8 @@ function getAutoTargetLeadSeconds(){
 
     const marchSec = marchInput ? parseTimeInput(marchInput.value) : 0;
     const arrivalOrder = parseInt(arrivalOrderInput ? arrivalOrderInput.value : "0", 10) || 0;
-    const arrivalOffsetSec = arrivalOrder >= 2 ? (arrivalOrder - 1) * orderStepSec : 0;
+    const effectiveOrder = orderStepSec > 0 ? (arrivalOrder > 0 ? arrivalOrder : index + 1) : 0;
+    const arrivalOffsetSec = effectiveOrder >= 2 ? (effectiveOrder - 1) * orderStepSec : 0;
 
     const lead = rallyMin*60 + marchSec - arrivalOffsetSec;
     if (lead > maxLead) maxLead = lead;
@@ -1018,8 +1012,8 @@ function updateAutoTargetTime(){
 
 function getOrderStepSec(){
   const activeBtn = document.querySelector(".order-step-btn.active");
-  const v = activeBtn ? parseFloat(activeBtn.dataset.step) : 1;
-  return isNaN(v) ? 1 : v;
+  const v = activeBtn ? parseFloat(activeBtn.dataset.step) : 0;
+  return isNaN(v) ? 0 : v;
 }
 
 function recalc(){
@@ -1068,7 +1062,8 @@ function recalc(){
     const marchSec = petBuffActive ? (rawMarchSec / 1.3) : rawMarchSec;
     const arrivalOrder = parseInt(arrivalOrderInput ? arrivalOrderInput.value : "0", 10) || 0;
     const orderStepSec = getOrderStepSec();
-    const arrivalOffsetSec = arrivalOrder >= 2 ? (arrivalOrder - 1) * orderStepSec : 0;
+    const effectiveOrder = orderStepSec > 0 ? (arrivalOrder > 0 ? arrivalOrder : index + 1) : 0;
+    const arrivalOffsetSec = effectiveOrder >= 2 ? (effectiveOrder - 1) * orderStepSec : 0;
 
     if (marchHint){
       if (rawMarchSec>0) {
@@ -1081,9 +1076,9 @@ function recalc(){
 
     const startSeconds = baseSeconds + arrivalOffsetSec - rallyMin*60 - marchSec;
     const arrivalSeconds = baseSeconds + arrivalOffsetSec;
-    const selected = arrivalOrder > 0;
+    const selected = effectiveOrder > 0;
 
-    items.push({ name, rallyMin, startSeconds, arrivalSeconds, selected, presetLabelText, arrivalOrder });
+    items.push({ name, rallyMin, startSeconds, arrivalSeconds, selected, presetLabelText, arrivalOrder, effectiveOrder });
   });
 
   if (items.length===0){
@@ -1093,38 +1088,47 @@ function recalc(){
     return;
   }
 
-  const simultaneousItems = items
-    .filter(it => it.arrivalOrder === 0)
-    .sort((a,b)=>{
-      if (a.arrivalSeconds !== b.arrivalSeconds) return a.arrivalSeconds - b.arrivalSeconds;
-      return a.startSeconds - b.startSeconds;
-    });
-
-  const orderedItems = items
-    .filter(it => it.arrivalOrder > 0)
-    .sort((a,b)=>{
-      if (a.arrivalOrder !== b.arrivalOrder) return a.arrivalOrder - b.arrivalOrder;
-      if (a.arrivalSeconds !== b.arrivalSeconds) return a.arrivalSeconds - b.arrivalSeconds;
-      return a.startSeconds - b.startSeconds;
-    });
-
+  const orderStepSec = getOrderStepSec();
   const lines = [];
-  const showDecimalTime = getOrderStepSec() < 1;
+  const showDecimalTime = false;
 
-  if (simultaneousItems.length > 0){
+  if (orderStepSec === 0){
+    const allItems = items.slice().sort((a,b)=>{
+      if (a.arrivalSeconds !== b.arrivalSeconds) return a.arrivalSeconds - b.arrivalSeconds;
+      return a.startSeconds - b.startSeconds;
+    });
+
     lines.push("동시 도착");
-    simultaneousItems.forEach((it)=>{
+    allItems.forEach((it)=>{
       const mid = it.presetLabelText ? (it.presetLabelText + " ") : "";
       lines.push(it.name + ": " + mid + "집결 시작 " + formatTimeFromSeconds(it.startSeconds, showDecimalTime));
     });
-  }
+  } else {
+    const simultaneousItems = [];
 
-  if (orderedItems.length > 0){
-    if (lines.length > 0) lines.push("");
-    orderedItems.forEach((it)=>{
-      const mid = it.presetLabelText ? (it.presetLabelText + " ") : "";
-      lines.push(it.arrivalOrder + "순위 " + it.name + ": " + mid + "집결 시작 " + formatTimeFromSeconds(it.startSeconds, showDecimalTime));
-    });
+    const orderedItems = items
+      .filter(it => it.effectiveOrder > 0)
+      .sort((a,b)=>{
+        if (a.effectiveOrder !== b.effectiveOrder) return a.effectiveOrder - b.effectiveOrder;
+        if (a.arrivalSeconds !== b.arrivalSeconds) return a.arrivalSeconds - b.arrivalSeconds;
+        return a.startSeconds - b.startSeconds;
+      });
+
+    if (simultaneousItems.length > 0){
+      lines.push("동시 도착");
+      simultaneousItems.forEach((it)=>{
+        const mid = it.presetLabelText ? (it.presetLabelText + " ") : "";
+        lines.push(it.name + ": " + mid + "집결 시작 " + formatTimeFromSeconds(it.startSeconds, showDecimalTime));
+      });
+    }
+
+    if (orderedItems.length > 0){
+      if (lines.length > 0) lines.push("");
+      orderedItems.forEach((it)=>{
+        const mid = it.presetLabelText ? (it.presetLabelText + " ") : "";
+        lines.push(it.effectiveOrder + "순위 " + it.name + ": " + mid + "집결 시작 " + formatTimeFromSeconds(it.startSeconds, showDecimalTime));
+      });
+    }
   }
 
   const fullText = lines.join("\n");
